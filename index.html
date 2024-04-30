@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-time Face Tracking with TensorFlow.js</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/facemesh"></script>
+</head>
+<body>
+  <h1>Real-time Face Tracking with TensorFlow.js</h1>
+  <video autoplay playsinline muted id="webcam" width="640" height="480"></video>
+  <canvas id="output" width="640" height="480"></canvas>
+
+  <script>
+    async function runFaceTracking() {
+      const video = document.getElementById('webcam');
+      const canvas = document.getElementById('output');
+      const ctx = canvas.getContext('2d');
+
+
+      const model = await facemesh.load();
+
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+      video.srcObject = stream;
+
+
+      setInterval(async () => {
+        const predictions = await model.estimateFaces(video);
+
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+
+        predictions.forEach(prediction => {
+          const keypoints = prediction.scaledMesh;
+          for (let i = 0; i < keypoints.length; i++) {
+            const [x, y] = keypoints[i];
+            ctx.beginPath();
+            ctx.arc(x, y, 1, 0, 2 * Math.PI);
+            ctx.fillStyle = 'red';
+            ctx.fill();
+          }
+        });
+      }, 100); // 10 FPS
+    }
+    window.onload = () => runFaceTracking();
+  </script>
+</body>
+</html>
